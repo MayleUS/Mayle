@@ -4,19 +4,19 @@ export default function InfoStrip() {
       {/* Fila única → hacia la izquierda */}
       <div className="flex whitespace-nowrap animate-marquee">
         <span className="mx-8 text-white text-sm tracking-[0.15em] uppercase">
-          FREE shipping to Colombia on purchases over $200 USD
+          FREE shipping to all United States on purchases over $200 USD
         </span>
         <span className="mx-8 text-white text-sm tracking-[0.15em] uppercase">
-          FREE shipping to Colombia on purchases over $200 USD
+          FREE shipping to all United States on purchases over $200 USD
         </span>
         <span className="mx-8 text-white text-sm tracking-[0.15em] uppercase">
-          FREE shipping to Colombia on purchases over $200 USD
+          FREE shipping to all United States on purchases over $200 USD
         </span>
         <span className="mx-8 text-white text-sm tracking-[0.15em] uppercase">
-          FREE shipping to Colombia on purchases over $200 USD
+          FREE shipping to all United States on purchases over $200 USD
         </span>
         <span className="mx-8 text-white text-sm tracking-[0.15em] uppercase">
-          FREE shipping to Colombia on purchases over $200 USD
+          FREE shipping to all United States on purchases over $200 USD
         </span>
       </div>
     </div>
