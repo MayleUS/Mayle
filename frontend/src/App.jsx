@@ -10,7 +10,7 @@ import About from "./paginas/acercade/componentes/About.jsx";
 import FAQs from "./paginas/faqs/componentes/faqs.jsx";
 import Login from "./paginas/login/componentes/login.jsx";
 import Register from "./paginas/registro/componentes/Register.jsx";
-import CrearProducto from "./paginas/paneladmin/crearproductos/CrearProducto.jsx";
+import CrearProducto from "./paginas/paneladmin/crearproductos/pagina/CrearProductos.jsx";
 import PanelAdmin from "./paginas/paneladmin/pagina/paneladmin.jsx";
 import Pedido from "./paginas/pedido/pagina/Pedido.jsx";
 import PaypalSuccess from "./paginas/pedido/componentes/PaypalSuccess.jsx";

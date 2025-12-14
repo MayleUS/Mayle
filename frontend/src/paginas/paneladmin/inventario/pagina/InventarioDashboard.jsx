@@ -1,4 +1,3 @@
-// InventarioDashboard.jsx
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TarjetaProductos from "../componentes/TarjetaProductos";
@@ -16,7 +15,9 @@ export default function InventarioDashboard() {
   const productosPorPagina = 9;
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
 
-  // debounce del buscador
+  /* =======================
+     Debounce buscador
+  ======================= */
   useEffect(() => {
     const timer = setTimeout(() => {
       setFiltro(textoBusqueda);
@@ -25,7 +26,9 @@ export default function InventarioDashboard() {
     return () => clearTimeout(timer);
   }, [textoBusqueda]);
 
-  // Obtener productos
+  /* =======================
+     Obtener productos
+  ======================= */
   const obtenerProductos = useCallback(async () => {
     try {
       const { data } = await API.get("/productos/paginados", {
@@ -33,8 +36,8 @@ export default function InventarioDashboard() {
       });
       setProductos(data.productos || []);
     } catch (error) {
-      console.error("Error al obtener productos:", error);
-      toast.error("Error cargando productos", { duration: 4000 });
+      console.error(error);
+      toast.error("Error cargando productos");
       setProductos([]);
     }
   }, []);
@@ -43,7 +46,9 @@ export default function InventarioDashboard() {
     obtenerProductos();
   }, [obtenerProductos]);
 
-  // Filtrar productos localmente
+  /* =======================
+     Filtro local
+  ======================= */
   const productosFiltrados = useMemo(() => {
     if (!filtro.trim()) return productos;
 
@@ -55,7 +60,9 @@ export default function InventarioDashboard() {
     );
   }, [productos, filtro]);
 
-  // Paginación
+  /* =======================
+     Paginación
+  ======================= */
   const productosPagina = useMemo(() => {
     const inicio = (paginaActual - 1) * productosPorPagina;
     return productosFiltrados.slice(inicio, inicio + productosPorPagina);
@@ -67,44 +74,80 @@ export default function InventarioDashboard() {
     );
   }, [productosFiltrados]);
 
-  // Eliminar producto
+  /* =======================
+     Eliminar producto
+  ======================= */
   const eliminarProducto = useCallback(
     async (id) => {
       try {
         await API.delete(`/productos/eliminar/${id}`);
+        toast.success("Producto eliminado");
         obtenerProductos();
-        toast.success("Producto eliminado", { duration: 4000 });
       } catch (error) {
-        console.error("Error al eliminar producto:", error);
-        toast.error("Error al eliminar producto", { duration: 4000 });
+        console.error(error);
+        toast.error("Error al eliminar producto");
       }
     },
     [obtenerProductos]
   );
 
-  // Cambiar estado publicado (FIX DE try:)
+  /* =======================
+     Publicar / Despublicar
+  ======================= */
   const togglePublicado = useCallback(
     async (producto) => {
       try {
-        const updatedProducto = {
+        await API.put(`/productos/${producto._id}`, {
           ...producto,
           publicado: !producto.publicado,
-        };
-
-        await API.put(`/productos/${producto._id}`, updatedProducto);
-
+        });
+        toast.success("Estado actualizado");
         obtenerProductos();
-
-        toast.success("Estado actualizado", { duration: 3000 });
       } catch (error) {
-        console.error("Error al actualizar producto:", error);
-        toast.error("Error al actualizar producto", { duration: 3000 });
+        console.error(error);
+        toast.error("Error actualizando estado");
       }
     },
     [obtenerProductos]
   );
 
-  // Animaciones personalizadas
+  /* =======================
+     ⭐ Galería principal (HOME)
+     🔥 ACTUALIZACIÓN OPTIMISTA
+  ======================= */
+  const toggleGaleriaPrincipal = useCallback(async (id) => {
+    // UI inmediata
+    setProductos((prev) =>
+      prev.map((p) =>
+        p._id === id ? { ...p, galeriaPrincipal: !p.galeriaPrincipal } : p
+      )
+    );
+
+    try {
+      const { data } = await API.put(`/productos/${id}/galeria-principal`);
+      toast.success(data.mensaje);
+
+      // aseguramos consistencia con backend
+      setProductos((prev) =>
+        prev.map((p) =>
+          p._id === id ? { ...p, galeriaPrincipal: data.galeriaPrincipal } : p
+        )
+      );
+    } catch (error) {
+      // rollback si falla
+      setProductos((prev) =>
+        prev.map((p) =>
+          p._id === id ? { ...p, galeriaPrincipal: !p.galeriaPrincipal } : p
+        )
+      );
+      console.error(error);
+      toast.error("Error actualizando inicio");
+    }
+  }, []);
+
+  /* =======================
+     Animaciones
+  ======================= */
   const inventarioVariants = {
     initial: { opacity: 0, scale: 0.9, y: 50 },
     animate: { opacity: 1, scale: 1, y: 0 },
@@ -120,15 +163,13 @@ export default function InventarioDashboard() {
   const cambiarPagina = (nuevaPagina) => {
     setPaginaActual(nuevaPagina);
     setTimeout(() => {
-      const contenedorScroll = document.querySelector(
-        ".inventario-scroll, .overflow-y-auto, .scrollable"
-      );
-      if (contenedorScroll)
-        contenedorScroll.scrollTo({ top: 0, behavior: "smooth" });
-      else window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 150);
   };
 
+  /* =======================
+     Render
+  ======================= */
   return (
     <AnimatePresence mode="wait">
       {!productoSeleccionado ? (
@@ -138,10 +179,9 @@ export default function InventarioDashboard() {
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 0.45, ease: "easeInOut" }}
+          transition={{ duration: 0.45 }}
           className="space-y-6 inventario-scroll"
         >
-          {/* Buscador */}
           <Filtros filtro={textoBusqueda} setFiltro={setTextoBusqueda} />
 
           {productosPagina.length === 0 ? (
@@ -149,24 +189,11 @@ export default function InventarioDashboard() {
               No hay productos que coincidan.
             </div>
           ) : (
-            <motion.div
-              key={paginaActual + filtro}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {productosPagina.map((producto) => (
                 <motion.div
                   key={producto._id}
-                  whileHover={{
-                    scale: 1.03,
-                    y: -5,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-                  }}
-                  whileTap={{ scale: 0.96, y: 2 }}
-                  transition={{ type: "spring", stiffness: 250, damping: 15 }}
+                  whileHover={{ scale: 1.03, y: -5 }}
                   className="rounded-xl overflow-hidden bg-white cursor-pointer"
                   onClick={() => setProductoSeleccionado(producto)}
                 >
@@ -174,13 +201,15 @@ export default function InventarioDashboard() {
                     producto={producto}
                     togglePublicado={() => togglePublicado(producto)}
                     eliminarProducto={() => eliminarProducto(producto._id)}
+                    toggleGaleriaPrincipal={() =>
+                      toggleGaleriaPrincipal(producto._id)
+                    }
                   />
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           )}
 
-          {/* Paginador */}
           {totalPaginas > 1 && (
             <div className="flex justify-center gap-2 mt-6 flex-wrap">
               <button
@@ -188,7 +217,7 @@ export default function InventarioDashboard() {
                   paginaActual > 1 && cambiarPagina(paginaActual - 1)
                 }
                 disabled={paginaActual === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 border rounded"
               >
                 &lt; Prev
               </button>
@@ -211,7 +240,7 @@ export default function InventarioDashboard() {
                   cambiarPagina(paginaActual + 1)
                 }
                 disabled={paginaActual === totalPaginas}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 border rounded"
               >
                 Next &gt;
               </button>
@@ -225,7 +254,6 @@ export default function InventarioDashboard() {
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 0.45, ease: "easeInOut" }}
         >
           <EditarProductoForm
             producto={productoSeleccionado}
@@ -233,7 +261,7 @@ export default function InventarioDashboard() {
             onGuardar={() => {
               setProductoSeleccionado(null);
               obtenerProductos();
-              toast.success("Producto actualizado", { duration: 4000 });
+              toast.success("Producto actualizado");
             }}
           />
         </motion.div>

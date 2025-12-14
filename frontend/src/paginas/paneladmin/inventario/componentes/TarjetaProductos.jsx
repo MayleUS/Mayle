@@ -1,19 +1,25 @@
 import React from "react";
+import { Star } from "lucide-react";
 
-function TarjetaProductos({ producto, togglePublicado, eliminarProducto }) {
+function TarjetaProductos({
+  producto,
+  togglePublicado,
+  eliminarProducto,
+  toggleGaleriaPrincipal,
+}) {
   const stockTotal = producto.colores?.reduce(
     (total, c) =>
       total + (c.tallas?.reduce((a, t) => a + (t.stock || 0), 0) || 0),
     0
   );
 
+  const enInicio = producto.galeriaPrincipal;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-md">
-      {/* Estado */}
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="font-semibold text-gray-800 text-sm line-clamp-1">
-          {producto.nombre}
-        </h2>
+    <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between transition-all duration-200 hover:shadow-md">
+
+      {/* 🔥 ESTADO + EN INICIO */}
+      <div className="flex justify-end gap-2 mb-2">
         <span
           className={`px-2 py-1 text-xs font-semibold rounded-md ${
             producto.publicado
@@ -23,7 +29,19 @@ function TarjetaProductos({ producto, togglePublicado, eliminarProducto }) {
         >
           {producto.publicado ? "Publicado" : "Borrador"}
         </span>
+
+        {enInicio && (
+          <span className="flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full bg-yellow-400 text-yellow-900 shadow">
+            <Star size={12} />
+            En inicio
+          </span>
+        )}
       </div>
+
+      {/* Nombre */}
+      <h2 className="font-semibold text-gray-800 text-sm line-clamp-1 mb-2">
+        {producto.nombre}
+      </h2>
 
       {/* Info */}
       <div className="space-y-1 text-sm text-gray-700 flex-grow">
@@ -48,30 +66,50 @@ function TarjetaProductos({ producto, togglePublicado, eliminarProducto }) {
       </div>
 
       {/* Botones */}
-      <div className="mt-4 flex justify-between gap-2">
-        {/* Botón Despublicar / Publicar */}
+      <div className="mt-4 flex flex-col gap-2">
+
+        {/* 🏠 BOTÓN INICIO unificado colores */}
         <button
           onClick={(e) => {
-            e.stopPropagation(); // evita que el click llegue al motion.div padre
-            togglePublicado();
+            e.stopPropagation();
+            toggleGaleriaPrincipal();
           }}
-          className="flex-1 bg-slate-800 text-white px-3 py-1 rounded-md text-xs 
-                     hover:bg-slate-700 hover:shadow-md transition-all duration-200"
+          className={`w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all
+            ${
+              enInicio
+                ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+            }`}
         >
-          {producto.publicado ? "Despublicar" : "Publicar"}
+          <Star size={14} />
+          {enInicio ? "Quitar del inicio" : "Mostrar en inicio"}
         </button>
 
-        {/* Botón Eliminar */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // evita que el click llegue al motion.div padre
-            eliminarProducto(producto._id);
-          }}
-          className="flex-1 border border-red-600 text-red-600 px-3 py-1 rounded-md text-xs 
-                     hover:bg-red-50 hover:shadow-sm transition-all duration-200"
-        >
-          Eliminar
-        </button>
+        <div className="flex gap-2">
+          {/* Publicar */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePublicado();
+            }}
+            className="flex-1 bg-slate-800 text-white px-3 py-1 rounded-md text-xs 
+                       hover:bg-slate-700 transition-all"
+          >
+            {producto.publicado ? "Despublicar" : "Publicar"}
+          </button>
+
+          {/* Eliminar */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              eliminarProducto(producto._id);
+            }}
+            className="flex-1 border border-red-600 text-red-600 px-3 py-1 rounded-md text-xs 
+                       hover:bg-red-50 transition-all"
+          >
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -99,7 +99,7 @@ export default function CrearProducto() {
 
     try {
       const colores = variantes.map((v) => ({
-        color: [v.colorNombre],
+        color: [v.colorNombre, v.colorHex],
         imagenes: v.imagenes.filter((img) => img.trim() !== ""),
         tallas: v.tallas.map((t) => ({
           talla: t.talla,

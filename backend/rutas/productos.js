@@ -38,7 +38,7 @@ router.get('/paginados', async (req, res) => {
       .sort({ nombre: 1 })
       .skip((paginaNum - 1) * limiteNum)
       .limit(limiteNum)
-      .select("nombre precio publicado categoria colores guia"); // solo campos necesarios
+      .select("nombre precio publicado categoria colores guia galeriaPrincipal"); // solo campos necesarios
 
     res.json({
       pagina: paginaNum,
@@ -176,6 +176,34 @@ router.delete('/eliminar/:id', verificarToken, async (req, res) => {
     res.json({ mensaje: 'Producto eliminado exitosamente' });
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al eliminar el producto', error });
+  }
+});
+
+// ✅ Toggle galería principal (HOME)
+router.put('/:id/galeria-principal', verificarToken, async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'ADMIN') {
+      return res.status(403).json({ mensaje: 'Acceso denegado' });
+    }
+
+    const producto = await Productos.findById(req.params.id);
+    if (!producto) {
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    }
+
+    producto.galeriaPrincipal = !producto.galeriaPrincipal;
+    await producto.save();
+
+    res.json({
+      mensaje: producto.galeriaPrincipal
+        ? 'Producto agregado al inicio'
+        : 'Producto removido del inicio',
+      galeriaPrincipal: producto.galeriaPrincipal,
+      producto,
+    });
+  } catch (error) {
+    console.error('Error galería principal:', error);
+    res.status(500).json({ mensaje: 'Error actualizando galería', error });
   }
 });
 
