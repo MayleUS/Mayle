@@ -115,7 +115,13 @@ export default function Panel({ producto }) {
               </span>
             </div>
 
-            <div className="ml-32 grid grid-cols-8 gap-2">
+            <div className="
+                mt-3
+    grid grid-cols-4 gap-2
+    justify-center mx-auto
+    sm:mt-0 sm:ml-32 sm:mx-0
+    sm:grid-cols-8
+            ">
               {producto.tallas.map((talla) => {
                 const disponible =
                   !producto.tallasNoDisponibles?.includes(talla);
