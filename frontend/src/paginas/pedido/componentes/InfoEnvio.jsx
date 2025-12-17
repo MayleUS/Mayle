@@ -1,8 +1,7 @@
 import React from "react";
 
-// Lista de países (puedes reemplazarla con una lista más completa)
+// Lista de países
 const countries = ["United States"];
-
 
 // Provincias de Estados Unidos
 const usStates = [
@@ -47,6 +46,12 @@ export default function InfoEnvio({
 
     onPayNow();
   };
+
+  // 🚚 Envío gratis solo para Georgia
+  const envioGratis =
+    country === "United States" &&
+    shippingAddress.province &&
+    shippingAddress.province.toLowerCase() === "georgia";
 
   return (
     <div className="mt-6">
@@ -137,7 +142,7 @@ export default function InfoEnvio({
             }
           />
 
-          {/* Provincia/Estado */}
+          {/* Provincia / Estado */}
           {country === "United States" ? (
             <select
               required
@@ -182,6 +187,15 @@ export default function InfoEnvio({
             }
           />
         </div>
+
+        {/* Aviso de envío */}
+        {shippingAddress.province && (
+          <p className="text-xs text-gray-600">
+            {envioGratis
+              ? "🎉 Free shipping in Georgia"
+              : "🚚 Shipping cost: $10.95"}
+          </p>
+        )}
 
         {/* Checkboxes */}
         <label className="flex items-center gap-2 text-sm">

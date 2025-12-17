@@ -5,14 +5,14 @@ import { validarCupon } from "../../../servicios/cuponService";
 export default function ResumenPedido({
   products = [],
   subtotal,
-  total,
+  shippingCost = 10.95, // 👈 viene desde Pedido.jsx
   setDescuento: setDescuentoPadre,
 }) {
   const [codigoCupon, setCodigoCupon] = useState("");
   const [descuento, setDescuento] = useState(0);
   const [cargando, setCargando] = useState(false);
 
-  const costoEnvio = 10.95;
+  const taxRate = 6.5; // %
 
   useEffect(() => {
     // Sincronizar el descuento local con el componente padre (Pedido.jsx)
@@ -57,12 +57,15 @@ export default function ResumenPedido({
   // Descuento solo sobre el subtotal
   const descuentoAplicado = descuento ? (subtotal * descuento) / 100 : 0;
 
-  // Total final = subtotal - descuento + envío
-  const totalConDescuento = subtotal - descuentoAplicado + costoEnvio;
+  // Tax (6.5%) sobre subtotal con descuento
+  const taxAplicado = ((subtotal - descuentoAplicado) * taxRate) / 100;
+
+  // Total final = subtotal - descuento + envío + tax
+  const totalConDescuento =
+    subtotal - descuentoAplicado + shippingCost + taxAplicado;
 
   return (
     <aside className="lg:col-span-4">
-      {/* Toaster para las notificaciones */}
       <Toaster richColors position="top-right" />
 
       {/* 🧾 Lista de productos */}
@@ -71,7 +74,9 @@ export default function ResumenPedido({
           <div
             key={product.id + product.color + product.talla + index}
             className={`flex items-start gap-3 pb-4 ${
-              index < products.length - 1 ? "border-b border-gray-200 mb-4" : ""
+              index < products.length - 1
+                ? "border-b border-gray-200 mb-4"
+                : ""
             }`}
           >
             <img
@@ -96,7 +101,6 @@ export default function ResumenPedido({
                 </div>
               </div>
 
-              {/* 🎨 Color y cantidad */}
               <div className="text-xs text-gray-400 mt-2">
                 <span className="font-medium text-gray-500">Color:</span>{" "}
                 {product.color || "—"}
@@ -110,7 +114,7 @@ export default function ResumenPedido({
         ))}
       </div>
 
-      {/* 🎟️ Campo de descuento */}
+      {/* 🎟️ Cupón */}
       <div className="border border-gray-200 rounded-md p-4 mb-4">
         <div className="flex gap-2">
           <input
@@ -131,14 +135,11 @@ export default function ResumenPedido({
         </div>
       </div>
 
-      {/* 💰 Resumen de totales */}
+      {/* 💰 Totales */}
       <div className="border border-gray-200 rounded-md p-4">
         <div className="flex justify-between mb-2">
           <span className="text-sm">Subtotal</span>
-          <span className="text-sm flex items-baseline gap-1">
-            ${subtotal.toFixed(2)}
-            <span className="text-[10px] text-gray-400 font-normal">USD</span>
-          </span>
+          <span className="text-sm">${subtotal.toFixed(2)}</span>
         </div>
 
         {descuento > 0 && (
@@ -148,20 +149,21 @@ export default function ResumenPedido({
           </div>
         )}
 
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between mb-2">
           <span className="text-sm">Envío</span>
-          <span className="text-sm flex items-baseline gap-1">
-            ${costoEnvio.toFixed(2)}
-            <span className="text-[10px] text-gray-400 font-normal">USD</span>
+          <span className="text-sm">
+            {shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}
           </span>
+        </div>
+
+        <div className="flex justify-between mb-4">
+          <span className="text-sm">Tax (6.5%)</span>
+          <span className="text-sm">${taxAplicado.toFixed(2)}</span>
         </div>
 
         <div className="flex justify-between font-semibold text-lg">
           <span>Total</span>
-          <span className="flex items-baseline gap-1">
-            ${totalConDescuento.toFixed(2)}
-            <span className="text-[10px] text-gray-400 font-normal">USD</span>
-          </span>
+          <span>${totalConDescuento.toFixed(2)}</span>
         </div>
       </div>
     </aside>

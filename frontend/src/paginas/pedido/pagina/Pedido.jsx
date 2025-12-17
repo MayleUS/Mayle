@@ -24,15 +24,31 @@ export default function Pedido() {
   // Estado del descuento recibido desde ResumenPedido
   const [descuento, setDescuento] = useState(0);
 
-  // 🧮 Calcular totales
+  // 🧮 Constantes
+  const taxRate = 6.5; // %
+
+  // 🚚 Shipping dinámico (gratis en Georgia)
+  const shipping =
+    shippingAddress.province &&
+    shippingAddress.province.toLowerCase() === "georgia"
+      ? 0
+      : 10.95;
+
+  // 🧮 Cálculos
   const subtotal = calcularTotal();
-  const shipping = 10.95;
 
   // Descuento solo sobre el subtotal
-  const descuentoAplicado = subtotal * (descuento / 100);
+  const descuentoAplicado = descuento
+    ? (subtotal * descuento) / 100
+    : 0;
 
-  // Total final
-  const totalConDescuento = subtotal - descuentoAplicado + shipping;
+  // Tax sobre subtotal con descuento
+  const taxAplicado =
+    ((subtotal - descuentoAplicado) * taxRate) / 100;
+
+  // Total final (EL MISMO QUE PAYPAL)
+  const totalConDescuento =
+    subtotal - descuentoAplicado + shipping + taxAplicado;
 
   // 🟢 Confirmar pedido
   const handleConfirmarPedido = async () => {
@@ -47,7 +63,7 @@ export default function Pedido() {
         return;
       }
 
-      // Datos EXACTOS para el backend
+      // 📦 Datos EXACTOS para backend y PayPal
       const pedidoData = {
         first_name: shippingAddress.first,
         last_name: shippingAddress.last,
@@ -61,8 +77,13 @@ export default function Pedido() {
 
         subtotal: subtotal,
         valor_envio: shipping,
+
         descuento_aplicado: descuento,
         valor_descuento: descuentoAplicado,
+
+        tax_porcentaje: taxRate,
+        valor_tax: taxAplicado,
+
         total_pedido: totalConDescuento,
 
         productos: productosCarrito.map((item) => ({
@@ -82,7 +103,7 @@ export default function Pedido() {
       // Guardar pedido para PayPalSuccess.jsx
       localStorage.setItem("pedidoData", JSON.stringify(pedidoData));
 
-      // Crear orden PayPal
+      // 💰 Crear orden PayPal
       const data = await confirmarPedido(pedidoData);
       console.log("💰 Orden PayPal creada:", data);
 
@@ -138,7 +159,7 @@ export default function Pedido() {
                 cantidad: item.cantidad,
               }))}
               subtotal={subtotal}
-              total={subtotal + shipping} // se envía el total base
+              shippingCost={shipping}  // 👈 Shipping dinámico pasado correctamente
               setDescuento={setDescuento}
             />
           )}
