@@ -3,15 +3,16 @@ const router = express.Router();
 const Productos = require('../modelos/productos');
 const verificarToken = require('../middlewares/autenticacion');
 
-// Obtener todos los productos o filtrarlos por categoría con ?categoria=...
+// ---------------------------------------------
+// OBTENER PRODUCTOS (con filtro opcional)
+// ---------------------------------------------
 router.get('/', async (req, res) => {
   try {
     const { categoria } = req.query;
 
     let filtro = {};
     if (categoria) {
-      const categoriaNormalizada = categoria.trim();
-      filtro.categoria = { $in: [new RegExp(`^${categoriaNormalizada}$`, 'i')] };
+      filtro.categoria = { $in: [new RegExp(`^${categoria.trim()}$`, 'i')] };
     }
 
     const productos = await Productos.find(filtro);
@@ -21,15 +22,20 @@ router.get('/', async (req, res) => {
   }
 });
 
-// --- Obtener productos paginados ---
+// ---------------------------------------------
+// PRODUCTOS PAGINADOS
+// ---------------------------------------------
 router.get('/paginados', async (req, res) => {
   try {
     const { categoria, pagina = 1, limite = 6 } = req.query;
-    const paginaNum = parseInt(pagina) || 1;
-    const limiteNum = parseInt(limite) || 6;
+
+    const paginaNum = parseInt(pagina);
+    const limiteNum = parseInt(limite);
 
     let filtro = {};
-    if (categoria) filtro.categoria = { $in: [new RegExp(`^${categoria.trim()}$`, 'i')] };
+    if (categoria) {
+      filtro.categoria = { $in: [new RegExp(`^${categoria.trim()}$`, 'i')] };
+    }
 
     const totalProductos = await Productos.countDocuments(filtro);
     const totalPaginas = Math.ceil(totalProductos / limiteNum);
@@ -38,7 +44,7 @@ router.get('/paginados', async (req, res) => {
       .sort({ nombre: 1 })
       .skip((paginaNum - 1) * limiteNum)
       .limit(limiteNum)
-      .select("nombre precio publicado categoria colores guia galeriaPrincipal"); // solo campos necesarios
+      .select("nombre precio publicado categoria categoriaPrincipal colores guia galeriaPrincipal");
 
     res.json({
       pagina: paginaNum,
@@ -47,14 +53,19 @@ router.get('/paginados', async (req, res) => {
       productos,
     });
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al obtener los productos paginados', error });
+    res.status(500).json({ mensaje: 'Error al obtener productos paginados', error });
   }
 });
 
-// ✅ Obtener valores únicos para filtros (colores, tallas, categorías y categorías principales)
+// ---------------------------------------------
+// OPCIONES PARA FILTROS
+// ---------------------------------------------
 router.get('/filtros/opciones', async (req, res) => {
   try {
-    const productos = await Productos.find({}, 'categoria categoriaPrincipal colores.color colores.tallas.talla');
+    const productos = await Productos.find(
+      {},
+      'categoria categoriaPrincipal colores.color colores.tallas.talla'
+    );
 
     const coloresSet = new Set();
     const tallasSet = new Set();
@@ -62,66 +73,74 @@ router.get('/filtros/opciones', async (req, res) => {
     const categoriasPrincipalesSet = new Set();
 
     productos.forEach(prod => {
-      // Categorías normales
-      if (Array.isArray(prod.categoria)) {
-        prod.categoria.forEach(cat => categoriasSet.add(cat));
-      } else if (prod.categoria) {
-        categoriasSet.add(prod.categoria);
-      }
+      prod.categoria?.forEach(c => categoriasSet.add(c));
+      prod.categoriaPrincipal?.forEach(cp => categoriasPrincipalesSet.add(cp));
 
-      // Categorías principales
-      if (Array.isArray(prod.categoriaPrincipal)) {
-        prod.categoriaPrincipal.forEach(cp => categoriasPrincipalesSet.add(cp));
-      } else if (prod.categoriaPrincipal) {
-        categoriasPrincipalesSet.add(prod.categoriaPrincipal);
-      }
-
-      // Colores y tallas
       prod.colores?.forEach(colorObj => {
-        if (Array.isArray(colorObj.color)) {
-          colorObj.color.forEach(c => coloresSet.add(c));
-        } else if (colorObj.color) {
-          coloresSet.add(colorObj.color);
-        }
-
-        colorObj.tallas?.forEach(t => {
-          if (t.talla) tallasSet.add(t.talla);
-        });
+        colorObj.color?.forEach(c => coloresSet.add(c));
+        colorObj.tallas?.forEach(t => t.talla && tallasSet.add(t.talla));
       });
     });
 
     res.json({
-      colores: Array.from(coloresSet).sort(),
-      tallas: Array.from(tallasSet).sort(),
-      categorias: Array.from(categoriasSet).sort(),
-      categoriasPrincipales: Array.from(categoriasPrincipalesSet).sort() // 👈 agregado
+      colores: [...coloresSet].sort(),
+      tallas: [...tallasSet].sort(),
+      categorias: [...categoriasSet].sort(),
+      categoriasPrincipales: [...categoriasPrincipalesSet].sort(),
     });
   } catch (error) {
-    console.error("Error al obtener filtros:", error);
-    res.status(500).json({ mensaje: "Error al obtener filtros", error });
+    res.status(500).json({ mensaje: 'Error al obtener filtros', error });
   }
 });
 
-// Obtener producto por ID
+// ---------------------------------------------
+// OBTENER PRODUCTO POR ID
+// ---------------------------------------------
 router.get('/:id', async (req, res) => {
   try {
     const producto = await Productos.findById(req.params.id);
-    if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    if (!producto) {
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    }
     res.json(producto);
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al obtener el producto', error });
+    res.status(500).json({ mensaje: 'Error al obtener producto', error });
   }
 });
 
-// Crear un nuevo producto (solo ADMIN)
+// ---------------------------------------------
+// CREAR PRODUCTO (ADMIN)
+// ---------------------------------------------
 router.post('/', verificarToken, async (req, res) => {
   try {
-    if (req.usuario.rol !== 'ADMIN') return res.status(403).json({ mensaje: 'Acceso denegado. Solo administradores.' });
+    if (req.usuario.rol !== 'ADMIN') {
+      return res.status(403).json({ mensaje: 'Acceso denegado' });
+    }
 
-    const { categoria, descripcion, colores, nombre, precio, cuidados, descuentoPorcentaje, guia } = req.body;
+    const {
+      nombre,
+      categoriaPrincipal,
+      categoria,
+      descripcion,
+      colores,
+      precio,
+      cuidados,
+      descuentoPorcentaje,
+      guia
+    } = req.body;
 
-    const productoExistente = await Productos.findOne({ nombre });
-    if (productoExistente) return res.status(400).json({ mensaje: 'El producto ya existe' });
+    const existente = await Productos.findOne({ nombre });
+    if (existente) {
+      return res.status(400).json({ mensaje: 'El producto ya existe' });
+    }
+
+    const categoriaPrincipalLimpia = Array.isArray(categoriaPrincipal)
+      ? categoriaPrincipal.filter(Boolean)
+      : [];
+
+    const categoriaLimpia = Array.isArray(categoria)
+      ? categoria.filter(Boolean)
+      : [];
 
     const coloresValidados = colores.map(c => ({
       ...c,
@@ -129,10 +148,11 @@ router.post('/', verificarToken, async (req, res) => {
     }));
 
     const nuevoProducto = new Productos({
-      categoria,
+      nombre,
+      categoriaPrincipal: categoriaPrincipalLimpia,
+      categoria: categoriaLimpia,
       descripcion,
       colores: coloresValidados,
-      nombre,
       precio,
       cuidados,
       descuentoPorcentaje,
@@ -140,46 +160,66 @@ router.post('/', verificarToken, async (req, res) => {
     });
 
     await nuevoProducto.save();
-    res.status(201).json({ mensaje: 'Producto creado exitosamente', producto: nuevoProducto });
+
+    res.status(201).json({
+      mensaje: 'Producto creado exitosamente',
+      producto: nuevoProducto
+    });
+
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al crear el producto', error });
+    console.error('ERROR CREANDO PRODUCTO:', error);
+    res.status(500).json({ mensaje: 'Error al crear producto', error });
   }
 });
 
-// ✅ Actualizar un producto por ID (solo ADMIN)
+// ---------------------------------------------
+// ACTUALIZAR PRODUCTO (ADMIN)
+// ---------------------------------------------
 router.put('/:id', verificarToken, async (req, res) => {
   try {
-    if (req.usuario.rol !== 'ADMIN') return res.status(403).json({ mensaje: 'Acceso denegado. Solo administradores.' });
+    if (req.usuario.rol !== 'ADMIN') {
+      return res.status(403).json({ mensaje: 'Acceso denegado' });
+    }
 
-    const productoActualizado = await Productos.findByIdAndUpdate(
+    const actualizado = await Productos.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
 
-    if (!productoActualizado) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    if (!actualizado) {
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    }
 
-    res.json({ mensaje: 'Producto actualizado', producto: productoActualizado });
+    res.json({ mensaje: 'Producto actualizado', producto: actualizado });
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al actualizar el producto', error });
+    res.status(500).json({ mensaje: 'Error al actualizar producto', error });
   }
 });
 
-// Eliminar un producto por ID (solo ADMIN)
+// ---------------------------------------------
+// ELIMINAR PRODUCTO (ADMIN)
+// ---------------------------------------------
 router.delete('/eliminar/:id', verificarToken, async (req, res) => {
   try {
-    if (req.usuario.rol !== 'ADMIN') return res.status(403).json({ mensaje: 'Acceso denegado. Solo administradores.' });
+    if (req.usuario.rol !== 'ADMIN') {
+      return res.status(403).json({ mensaje: 'Acceso denegado' });
+    }
 
     const eliminado = await Productos.findByIdAndDelete(req.params.id);
-    if (!eliminado) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    if (!eliminado) {
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    }
 
     res.json({ mensaje: 'Producto eliminado exitosamente' });
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al eliminar el producto', error });
+    res.status(500).json({ mensaje: 'Error al eliminar producto', error });
   }
 });
 
-// ✅ Toggle galería principal (HOME)
+// ---------------------------------------------
+// TOGGLE GALERÍA PRINCIPAL
+// ---------------------------------------------
 router.put('/:id/galeria-principal', verificarToken, async (req, res) => {
   try {
     if (req.usuario.rol !== 'ADMIN') {
@@ -198,11 +238,9 @@ router.put('/:id/galeria-principal', verificarToken, async (req, res) => {
       mensaje: producto.galeriaPrincipal
         ? 'Producto agregado al inicio'
         : 'Producto removido del inicio',
-      galeriaPrincipal: producto.galeriaPrincipal,
-      producto,
+      producto
     });
   } catch (error) {
-    console.error('Error galería principal:', error);
     res.status(500).json({ mensaje: 'Error actualizando galería', error });
   }
 });

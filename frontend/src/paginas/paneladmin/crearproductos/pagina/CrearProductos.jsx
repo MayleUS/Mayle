@@ -19,8 +19,8 @@ export default function CrearProducto() {
     nombre: "",
     Descuento: "",
     precio: "",
-    categoriaPrincipal: [""],
-    categoria: [""],
+    categoriaPrincipal: [],
+    categoria: [],
     descripcion: "",
     cuidados: "",
     guia: "",
@@ -29,7 +29,8 @@ export default function CrearProducto() {
 
   const [variantes, setVariantes] = useState([varianteInicial]);
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
-  const [categoriasPrincipalesDisponibles, setCategoriasPrincipalesDisponibles] = useState([]);
+  const [categoriasPrincipalesDisponibles, setCategoriasPrincipalesDisponibles] =
+    useState([]);
 
   useEffect(() => {
     const obtenerCategorias = async () => {
@@ -56,17 +57,16 @@ export default function CrearProducto() {
     if (!form.descripcion.trim()) faltantes.push("Descripción");
     if (!form.cuidados.trim()) faltantes.push("Cuidados");
 
-    // Categorías
-    const catP = form.categoriaPrincipal.filter((c) => !c.trim());
-    if (catP.length > 0) faltantes.push("Categoría principal");
+    if (form.categoriaPrincipal.length === 0)
+      faltantes.push("Categoría principal");
+    if (form.categoria.length === 0)
+      faltantes.push("Categoría secundaria");
 
-    const catS = form.categoria.filter((c) => !c.trim());
-    if (catS.length > 0) faltantes.push("Categoría secundaria");
-
-    // Variantes
     variantes.forEach((v, idx) => {
-      if (!v.colorNombre.trim()) faltantes.push(`Color de variante #${idx + 1}`);
-      if (!v.colorHex.trim()) faltantes.push(`Color HEX de variante #${idx + 1}`);
+      if (!v.colorNombre.trim())
+        faltantes.push(`Color de variante #${idx + 1}`);
+      if (!v.colorHex.trim())
+        faltantes.push(`Color HEX de variante #${idx + 1}`);
 
       const imgsVacias = v.imagenes.filter((i) => !i.trim());
       if (imgsVacias.length === v.imagenes.length)
@@ -98,6 +98,14 @@ export default function CrearProducto() {
     }
 
     try {
+      const categoriaPrincipalLimpia = form.categoriaPrincipal
+        .map((c) => c.replace(/\n/g, "").trim())
+        .filter(Boolean);
+
+      const categoriaLimpia = form.categoria
+        .map((c) => c.replace(/\n/g, "").trim())
+        .filter(Boolean);
+
       const colores = variantes.map((v) => ({
         color: [v.colorNombre, v.colorHex],
         imagenes: v.imagenes.filter((img) => img.trim() !== ""),
@@ -110,8 +118,8 @@ export default function CrearProducto() {
 
       const nuevoProducto = {
         nombre: form.nombre,
-        categoriaPrincipal: form.categoriaPrincipal,
-        categoria: form.categoria,
+        categoriaPrincipal: categoriaPrincipalLimpia,
+        categoria: categoriaLimpia,
         descripcion: form.descripcion,
         cuidados: form.cuidados,
         guia: form.guia,
@@ -119,6 +127,8 @@ export default function CrearProducto() {
         descuentoPorcentaje: parseFloat(form.Descuento) || 0,
         colores,
       };
+
+      console.log("ENVIANDO →", nuevoProducto);
 
       await API.post("/productos", nuevoProducto);
 
@@ -135,8 +145,8 @@ export default function CrearProducto() {
       nombre: "",
       Descuento: "",
       precio: "",
-      categoriaPrincipal: [""],
-      categoria: [""],
+      categoriaPrincipal: [],
+      categoria: [],
       descripcion: "",
       cuidados: "",
       guia: "",
@@ -154,14 +164,29 @@ export default function CrearProducto() {
     }
   };
 
+  // ✅ FIX DEFINITIVO
   const actualizarCategoriaPrincipal = (index, valor) => {
-    const nuevas = [...form.categoriaPrincipal];
-    nuevas[index] = valor;
-    setForm((f) => ({ ...f, categoriaPrincipal: nuevas }));
+    const limpio = (valor || "").replace(/\n/g, "").trim();
+    if (!limpio) return;
+
+    setForm((f) => {
+      const nuevas = [...f.categoriaPrincipal];
+
+      if (nuevas[index] === undefined) {
+        nuevas.push(limpio);
+      } else {
+        nuevas[index] = limpio;
+      }
+
+      return { ...f, categoriaPrincipal: nuevas };
+    });
   };
 
   const agregarCategoriaPrincipal = () =>
-    setForm((f) => ({ ...f, categoriaPrincipal: [...f.categoriaPrincipal, ""] }));
+    setForm((f) => ({
+      ...f,
+      categoriaPrincipal: [...f.categoriaPrincipal, ""],
+    }));
 
   const eliminarCategoriaPrincipal = (index) =>
     setForm((f) => ({
@@ -170,9 +195,20 @@ export default function CrearProducto() {
     }));
 
   const actualizarCategoria = (index, valor) => {
-    const nuevas = [...form.categoria];
-    nuevas[index] = valor;
-    setForm((f) => ({ ...f, categoria: nuevas }));
+    const limpio = (valor || "").replace(/\n/g, "").trim();
+    if (!limpio) return;
+
+    setForm((f) => {
+      const nuevas = [...f.categoria];
+
+      if (nuevas[index] === undefined) {
+        nuevas.push(limpio);
+      } else {
+        nuevas[index] = limpio;
+      }
+
+      return { ...f, categoria: nuevas };
+    });
   };
 
   const agregarCategoria = () =>
@@ -201,10 +237,15 @@ export default function CrearProducto() {
             agregarCategoriaPrincipal={agregarCategoriaPrincipal}
             eliminarCategoriaPrincipal={eliminarCategoriaPrincipal}
             categoriasDisponibles={categoriasDisponibles}
-            categoriasPrincipalesDisponibles={categoriasPrincipalesDisponibles}
+            categoriasPrincipalesDisponibles={
+              categoriasPrincipalesDisponibles
+            }
           />
 
-          <SeccionVariantes variantes={variantes} setVariantes={setVariantes} />
+          <SeccionVariantes
+            variantes={variantes}
+            setVariantes={setVariantes}
+          />
 
           <SeccionGuia
             guia={form.guia}
