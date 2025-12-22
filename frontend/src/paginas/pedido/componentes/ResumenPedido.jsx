@@ -5,7 +5,7 @@ import { validarCupon } from "../../../servicios/cuponService";
 export default function ResumenPedido({
   products = [],
   subtotal,
-  shippingCost = 10.95, // 👈 viene desde Pedido.jsx
+  shippingCost = 10.95, // viene desde Pedido.jsx
   setDescuento: setDescuentoPadre,
 }) {
   const [codigoCupon, setCodigoCupon] = useState("");
@@ -68,7 +68,7 @@ export default function ResumenPedido({
     <aside className="lg:col-span-4">
       <Toaster richColors position="top-right" />
 
-      {/* 🧾 Lista de productos */}
+      {/*Lista de productos */}
       <div className="border border-gray-200 rounded-md p-4 mb-4">
         {products.map((product, index) => (
           <div
@@ -114,7 +114,7 @@ export default function ResumenPedido({
         ))}
       </div>
 
-      {/* 🎟️ Cupón */}
+      {/*Cupón */}
       <div className="border border-gray-200 rounded-md p-4 mb-4">
         <div className="flex gap-2">
           <input
@@ -135,7 +135,7 @@ export default function ResumenPedido({
         </div>
       </div>
 
-      {/* 💰 Totales */}
+      {/*Totales */}
       <div className="border border-gray-200 rounded-md p-4">
         <div className="flex justify-between mb-2">
           <span className="text-sm">Subtotal</span>
@@ -150,7 +150,7 @@ export default function ResumenPedido({
         )}
 
         <div className="flex justify-between mb-2">
-          <span className="text-sm">Envío</span>
+          <span className="text-sm">Shipping</span>
           <span className="text-sm">
             {shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}
           </span>

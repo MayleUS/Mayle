@@ -1,4 +1,5 @@
 import React from "react";
+import { toast } from "sonner";
 
 // Lista de países
 const countries = ["United States"];
@@ -40,14 +41,16 @@ export default function InfoEnvio({
     );
 
     if (vacios.length > 0) {
-      alert("⚠️ Por favor completa todos los campos obligatorios antes de continuar.");
+      toast.warning(
+        "Por favor completa todos los campos obligatorios antes de continuar"
+      );
       return;
     }
 
     onPayNow();
   };
 
-  // 🚚 Envío gratis solo para Georgia
+  // Envío gratis solo para Georgia
   const envioGratis =
     country === "United States" &&
     shippingAddress.province &&
@@ -192,8 +195,8 @@ export default function InfoEnvio({
         {shippingAddress.province && (
           <p className="text-xs text-gray-600">
             {envioGratis
-              ? "🎉 Free shipping in Georgia"
-              : "🚚 Shipping cost: $10.95"}
+              ? "Free shipping in Georgia"
+              : "Shipping cost: $10.95"}
           </p>
         )}
 

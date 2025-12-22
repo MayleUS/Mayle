@@ -1,9 +1,11 @@
 import React, { useState, useContext } from "react";
+import { Link } from "react-router-dom";
 import Contacto from "../componentes/Contacto";
 import InfoEnvio from "../componentes/InfoEnvio";
 import ResumenPedido from "../componentes/ResumenPedido";
 import { CarritoContexto } from "../../../contexto/CarritoContexto";
 import { confirmarPedido } from "../../../servicios/pedidoService";
+import { toast } from "sonner";
 
 export default function Pedido() {
   const { productosCarrito, calcularTotal } = useContext(CarritoContexto);
@@ -24,17 +26,17 @@ export default function Pedido() {
   // Estado del descuento recibido desde ResumenPedido
   const [descuento, setDescuento] = useState(0);
 
-  // 🧮 Constantes
+  // Constantes
   const taxRate = 6.5; // %
 
-  // 🚚 Shipping dinámico (gratis en Georgia)
+  // Shipping dinámico (gratis en Georgia)
   const shipping =
     shippingAddress.province &&
     shippingAddress.province.toLowerCase() === "georgia"
       ? 0
       : 10.95;
 
-  // 🧮 Cálculos
+  // Cálculos
   const subtotal = calcularTotal();
 
   // Descuento solo sobre el subtotal
@@ -50,20 +52,20 @@ export default function Pedido() {
   const totalConDescuento =
     subtotal - descuentoAplicado + shipping + taxAplicado;
 
-  // 🟢 Confirmar pedido
+  // Confirmar pedido
   const handleConfirmarPedido = async () => {
     try {
       if (!productosCarrito.length) {
-        alert("Tu carrito está vacío");
+        toast.error("Tu carrito está vacío");
         return;
       }
 
       if (!email || !shippingAddress.first || !shippingAddress.address) {
-        alert("Por favor completa los campos requeridos");
+        toast.warning("Por favor completa los campos requeridos");
         return;
       }
 
-      // 📦 Datos EXACTOS para backend y PayPal
+      //Datos EXACTOS para backend y PayPal
       const pedidoData = {
         first_name: shippingAddress.first,
         last_name: shippingAddress.last,
@@ -98,23 +100,25 @@ export default function Pedido() {
         })),
       };
 
-      console.log("📦 Enviando pedido al backend:", pedidoData);
+      console.log("Enviando pedido al backend:", pedidoData);
 
       // Guardar pedido para PayPalSuccess.jsx
       localStorage.setItem("pedidoData", JSON.stringify(pedidoData));
 
-      // 💰 Crear orden PayPal
+      toast.loading("Creando orden de PayPal…");
+
       const data = await confirmarPedido(pedidoData);
       console.log("💰 Orden PayPal creada:", data);
 
       if (data?.approvalUrl) {
+        toast.success("Redirigiendo a PayPal");
         window.location.href = data.approvalUrl;
       } else {
-        alert("No se pudo generar la orden de PayPal");
+        toast.error("No se pudo generar la orden de PayPal");
       }
     } catch (error) {
-      console.error("❌ Error creando la orden:", error);
-      alert("Error creando la orden");
+      console.error("Error creando la orden:", error);
+      toast.error("Error creando la orden");
     }
   };
 
@@ -122,7 +126,13 @@ export default function Pedido() {
     <div className="min-h-screen bg-white max-w-6xl mx-auto py-6 px-6">
       {/* Header */}
       <header className="flex items-center justify-center mb-6">
-        <h1 className="text-xl font-serif tracking-wide">Maylé</h1>
+        <Link to="/">
+        <img 
+        src="https://res.cloudinary.com/dvgpq1ezx/image/upload/v1757571936/Logo_lb2nfx.png"
+        alt="Maylé"
+        className="h-10 object-contain"
+        />
+        </Link>
       </header>
 
       {/* Contenido */}
@@ -159,7 +169,7 @@ export default function Pedido() {
                 cantidad: item.cantidad,
               }))}
               subtotal={subtotal}
-              shippingCost={shipping}  // 👈 Shipping dinámico pasado correctamente
+              shippingCost={shipping}
               setDescuento={setDescuento}
             />
           )}
