@@ -60,7 +60,7 @@ export default function InfoEnvio({
     <div className="mt-6">
       <h3 className="font-semibold mb-3 text-xl">Delivery</h3>
       <div className="space-y-3">
-        {/* País y Teléfono */}
+        {/* País y Teléfono (Responsivo: 1 columna en mobile, 2 en escritorio) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <select
             required
@@ -92,11 +92,11 @@ export default function InfoEnvio({
           />
         </div>
 
-        {/* Nombres */}
+        {/* Nombres (Responsivo: 1 columna en mobile, 2 en escritorio) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             required
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
             placeholder="First name"
             value={shippingAddress.first || ""}
             onChange={(e) =>
@@ -105,7 +105,7 @@ export default function InfoEnvio({
           />
           <input
             required
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
             placeholder="Last name"
             value={shippingAddress.last || ""}
             onChange={(e) =>
@@ -133,11 +133,11 @@ export default function InfoEnvio({
           }
         />
 
-        {/* Ciudad, provincia y código postal */}
+        {/* Ciudad, provincia y código postal (Responsivo: 1 columna en mobile, 2 en tablet, 4 en escritorio) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <input
             required
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm col-span-2"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
             placeholder="City"
             value={shippingAddress.city || ""}
             onChange={(e) =>
@@ -149,7 +149,7 @@ export default function InfoEnvio({
           {country === "United States" ? (
             <select
               required
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
               value={shippingAddress.province || ""}
               onChange={(e) =>
                 setShippingAddress({
@@ -168,7 +168,7 @@ export default function InfoEnvio({
           ) : (
             <input
               required
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
               placeholder="Province/Region"
               value={shippingAddress.province || ""}
               onChange={(e) =>
@@ -182,7 +182,7 @@ export default function InfoEnvio({
 
           <input
             required
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
             placeholder="Postal code"
             value={shippingAddress.postal || ""}
             onChange={(e) =>
