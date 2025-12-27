@@ -58,10 +58,10 @@ export default function InfoEnvio({
 
   return (
     <div className="mt-6">
-      <h3 className="font-semibold mb-3">Delivery</h3>
+      <h3 className="font-semibold mb-3 text-xl">Delivery</h3>
       <div className="space-y-3">
         {/* País y Teléfono */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <select
             required
             className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
@@ -93,7 +93,7 @@ export default function InfoEnvio({
         </div>
 
         {/* Nombres */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             required
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
@@ -134,7 +134,7 @@ export default function InfoEnvio({
         />
 
         {/* Ciudad, provincia y código postal */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <input
             required
             className="border border-gray-300 rounded-md px-3 py-2 text-sm col-span-2"

@@ -157,7 +157,7 @@ export default function ResumenPedido({
         </div>
 
         <div className="flex justify-between mb-4">
-          <span className="text-sm">Tax (6.5%)</span>
+          <span className="text-sm">Tax</span>
           <span className="text-sm">${taxAplicado.toFixed(2)}</span>
         </div>
 
