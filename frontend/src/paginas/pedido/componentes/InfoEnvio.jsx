@@ -146,7 +146,7 @@ export default function InfoEnvio({
           />
 
           {/* Provincia / Estado */}
-          {country === "United States" ? (
+          {country && country === "United States" ? (
             <select
               required
               className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
@@ -166,18 +166,20 @@ export default function InfoEnvio({
               ))}
             </select>
           ) : (
-            <input
-              required
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
-              placeholder="Province/Region"
-              value={shippingAddress.province || ""}
-              onChange={(e) =>
-                setShippingAddress({
-                  ...shippingAddress,
-                  province: e.target.value,
-                })
-              }
-            />
+            country && (
+              <input
+                required
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
+                placeholder="Province/Region"
+                value={shippingAddress.province || ""}
+                onChange={(e) =>
+                  setShippingAddress({
+                    ...shippingAddress,
+                    province: e.target.value,
+                  })
+                }
+              />
+            )
           )}
 
           <input

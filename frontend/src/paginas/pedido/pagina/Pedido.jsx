@@ -11,7 +11,7 @@ export default function Pedido() {
   const { productosCarrito, calcularTotal } = useContext(CarritoContexto);
 
   const [email, setEmail] = useState("");
-  const [country, setCountry] = useState("Colombia");
+  const [country, setCountry] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
     first: "",
     last: "",
